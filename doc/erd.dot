@@ -213,11 +213,17 @@ m_Linkset [label = <<table border="0" align="center" cellspacing="0.5" cellpaddi
 |
 <table border="0" align="left" cellspacing="2" cellpadding="0" width="134">
   <tr><td align="left" width="130" port="bugs">bugs <font face="Arial Italic" color="grey60">string</font></td></tr>
+  <tr><td align="left" width="130" port="bugs_verified_at">bugs_verified_at <font face="Arial Italic" color="grey60">date</font></td></tr>
   <tr><td align="left" width="130" port="code">code <font face="Arial Italic" color="grey60">string</font></td></tr>
+  <tr><td align="left" width="130" port="code_verified_at">code_verified_at <font face="Arial Italic" color="grey60">date</font></td></tr>
   <tr><td align="left" width="130" port="docs">docs <font face="Arial Italic" color="grey60">string</font></td></tr>
+  <tr><td align="left" width="130" port="docs_verified_at">docs_verified_at <font face="Arial Italic" color="grey60">date</font></td></tr>
   <tr><td align="left" width="130" port="home">home <font face="Arial Italic" color="grey60">string</font></td></tr>
+  <tr><td align="left" width="130" port="home_verified_at">home_verified_at <font face="Arial Italic" color="grey60">date</font></td></tr>
   <tr><td align="left" width="130" port="mail">mail <font face="Arial Italic" color="grey60">string</font></td></tr>
+  <tr><td align="left" width="130" port="mail_verified_at">mail_verified_at <font face="Arial Italic" color="grey60">date</font></td></tr>
   <tr><td align="left" width="130" port="wiki">wiki <font face="Arial Italic" color="grey60">string</font></td></tr>
+  <tr><td align="left" width="130" port="wiki_verified_at">wiki_verified_at <font face="Arial Italic" color="grey60">date</font></td></tr>
 </table>
 >];
 m_LogTicket [label = <<table border="0" align="center" cellspacing="0.5" cellpadding="0" width="134">
@@ -404,7 +410,6 @@ m_WebauthnCredential [label = <<table border="0" align="center" cellspacing="0.5
   m_OwnershipCall -> m_OwnershipRequest [arrowhead = "normal", arrowtail = "none", weight = "2"];
   m_Rubygem -> m_OwnershipCall [arrowhead = "normal", arrowtail = "none", weight = "2"];
   m_User -> m_OwnershipCall [arrowhead = "normal", arrowtail = "none", weight = "3"];
-  m_Rubygem -> m_Linkset [arrowhead = "none", arrowtail = "none", weight = "2"];
   m_User -> m_Deletion [arrowhead = "normal", arrowtail = "none", weight = "3"];
   m_User -> m_ApiKey [arrowhead = "normal", arrowtail = "none", weight = "3"];
   m_ApiKey -> m_ApiKeyRubygemScope [arrowhead = "none", arrowtail = "none", weight = "2"];
@@ -423,6 +428,7 @@ m_WebauthnCredential [label = <<table border="0" align="center" cellspacing="0.5
   m_Rubygem -> m_User [style = "dotted", arrowhead = "normal", arrowtail = "none", weight = "10", constraint = "false"];
   m_Rubygem -> m_Version [arrowhead = "normal", arrowtail = "none", weight = "3"];
   m_Rubygem -> m_WebHook [arrowhead = "normal", arrowtail = "none", weight = "2"];
+  m_Rubygem -> m_Linkset [arrowhead = "none", arrowtail = "none", weight = "2"];
   m_User -> m_Version [arrowhead = "normal", arrowtail = "none", weight = "3"];
   m_User -> m_WebHook [arrowhead = "normal", arrowtail = "none", weight = "3"];
   "m_GoodJob::BatchRecord" -> "m_GoodJob::Job" [arrowhead = "normal", arrowtail = "none", weight = "3"];
