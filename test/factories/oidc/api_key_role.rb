@@ -1,6 +1,6 @@
 FactoryBot.define do
   factory :oidc_api_key_role, class: "OIDC::ApiKeyRole" do
-    provider { build(:oidc_provider) }
+    provider factory: :oidc_provider
     user
     api_key_permissions do
       {
@@ -11,9 +11,11 @@ FactoryBot.define do
     access_policy do
       {
         statements: [
-          { effect: "allow", 
+          { effect: "allow",
             principal: { oidc: provider.issuer },
-            conditions: [] }
+            conditions: [
+              { operator: "string_equals", claim: "sub", value: "the_sub" }
+            ] }
         ]
       }
     end
