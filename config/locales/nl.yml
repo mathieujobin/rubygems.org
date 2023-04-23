@@ -465,7 +465,6 @@ nl:
       change_avatar:
       email_awaiting_confirmation:
       enter_password:
-      hide_email:
       optional_twitter_username:
       title: Wijzig profiel
       delete:
@@ -486,6 +485,7 @@ nl:
     update:
       confirmation_mail_sent:
       updated:
+    public_email:
     request_denied:
   rubygems:
     aside:

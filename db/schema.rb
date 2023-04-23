@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.0].define(version: 2023_03_24_190734) do
+ActiveRecord::Schema[7.0].define(version: 2023_04_23_202740) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "hstore"
   enable_extension "pgcrypto"
@@ -282,7 +282,7 @@ ActiveRecord::Schema[7.0].define(version: 2023_03_24_190734) do
     t.datetime "updated_at", precision: nil
     t.boolean "email_reset"
     t.string "handle"
-    t.boolean "hide_email", default: true
+    t.boolean "public_email", default: false
     t.string "twitter_username"
     t.string "unconfirmed_email"
     t.datetime "remember_token_expires_at", precision: nil

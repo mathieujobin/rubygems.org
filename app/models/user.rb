@@ -9,7 +9,7 @@ class User < ApplicationRecord
     bio
     email
     handle
-    hide_email
+    public_email
     location
     password
     website
@@ -128,7 +128,7 @@ class User < ApplicationRecord
 
   def payload
     attrs = { "id" => id, "handle" => handle }
-    attrs["email"] = email unless hide_email
+    attrs["email"] = email if public_email?
     attrs
   end
 

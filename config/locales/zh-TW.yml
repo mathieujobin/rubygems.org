@@ -448,7 +448,6 @@ zh-TW:
       change_avatar:
       email_awaiting_confirmation: 請驗證你的新 Email %{unconfirmed_email}
       enter_password: 輸入密碼
-      hide_email: 在公開的個人頁面中隱藏 email
       optional_twitter_username: Twitter 帳號（可選）
       title: 編輯個人檔案
       delete:
@@ -469,6 +468,7 @@ zh-TW:
     update:
       confirmation_mail_sent:
       updated:
+    public_email: 在公開的個人頁面中展示 email
     request_denied:
   rubygems:
     aside:

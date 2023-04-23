@@ -485,7 +485,7 @@
 <text text-anchor="start" x="2328" y="-741" font-family="Arial Italic" font-size="10.00" fill="#999999">string (128)</text>
 <text text-anchor="start" x="2234" y="-728" font-family="Arial" font-size="10.00">handle </text>
 <text text-anchor="start" x="2266" y="-728" font-family="Arial Italic" font-size="10.00" fill="#999999">string U</text>
-<text text-anchor="start" x="2234" y="-715" font-family="Arial" font-size="10.00">hide_email </text>
+<text text-anchor="start" x="2234" y="-715" font-family="Arial" font-size="10.00">pubic_email </text>
 <text text-anchor="start" x="2284" y="-715" font-family="Arial Italic" font-size="10.00" fill="#999999">boolean</text>
 <text text-anchor="start" x="2234" y="-702" font-family="Arial" font-size="10.00">mail_fails </text>
 <text text-anchor="start" x="2279" y="-702" font-family="Arial Italic" font-size="10.00" fill="#999999">integer</text>
@@ -736,7 +736,7 @@
 <text text-anchor="start" x="5713" y="-741" font-family="Arial Italic" font-size="10.00" fill="#999999">string (128)</text>
 <text text-anchor="start" x="5619" y="-728" font-family="Arial" font-size="10.00">handle </text>
 <text text-anchor="start" x="5651" y="-728" font-family="Arial Italic" font-size="10.00" fill="#999999">string U</text>
-<text text-anchor="start" x="5619" y="-715" font-family="Arial" font-size="10.00">hide_email </text>
+<text text-anchor="start" x="5619" y="-715" font-family="Arial" font-size="10.00">public_email </text>
 <text text-anchor="start" x="5669" y="-715" font-family="Arial Italic" font-size="10.00" fill="#999999">boolean</text>
 <text text-anchor="start" x="5619" y="-702" font-family="Arial" font-size="10.00">mail_fails </text>
 <text text-anchor="start" x="5664" y="-702" font-family="Arial Italic" font-size="10.00" fill="#999999">integer</text>
