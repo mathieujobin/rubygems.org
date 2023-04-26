@@ -15,6 +15,7 @@ class RubygemResource < Avo::BaseResource
   }
 
   action ReleaseReservedNamespace
+  action RestoreRubygemVersion
   action YankRubygem
 
   class IndexedFilter < ScopeBooleanFilter; end
