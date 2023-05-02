@@ -14,6 +14,7 @@ class User < ApplicationRecord
     password
     website
     twitter_username
+    full_name
   ].freeze
 
   before_save :_generate_confirmation_token_no_reset_unconfirmed_email, if: :will_save_change_to_unconfirmed_email?
@@ -61,6 +62,9 @@ class User < ApplicationRecord
     unpwn: true,
     allow_nil: true,
     unless: :skip_password_validation?
+
+  validates :full_name, length: { maximum: Gemcutter::MAX_FIELD_LENGTH }, allow_nil: true
+
   validate :unconfirmed_email_uniqueness
   validate :toxic_email_domain, on: :create
 
@@ -101,6 +105,13 @@ class User < ApplicationRecord
 
   def self.ownership_request_notifiable_owners
     where(ownerships: { ownership_request_notifier: true })
+  end
+
+  def self.normalize_email(email)
+    super
+  rescue ArgumentError => e
+    Rails.error.report(e, handled: true)
+    ""
   end
 
   def name

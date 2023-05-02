@@ -73,6 +73,24 @@ class UserTest < ActiveSupport::TestCase
       end
     end
 
+    context "full_name" do
+      should "be less than 255 characters" do
+        user = build(:user, full_name: "")
+
+        assert_predicate user, :valid?
+
+        user.full_name = "a" * 256
+
+        refute_predicate user, :valid?
+        assert_contains user.errors[:full_name], "is too long (maximum is 255 characters)"
+
+        user.full_name = "Name Last name"
+        user.valid?
+
+        assert_nil user.errors[:handle].first
+      end
+    end
+
     context "email" do
       should "be less than 255 characters" do
         user = build(:user, email: format("%s@example.com", "a" * 255))
@@ -813,6 +831,16 @@ class UserTest < ActiveSupport::TestCase
       assert_changed(@user, :email, :password, :api_key, :mfa_seed, :remember_token) do
         @user.block!
       end
+    end
+  end
+
+  context ".normalize_email" do
+    should "return the normalized email" do
+      assert_equal "user@example.com", User.normalize_email(:"UsEr@ example . COM")
+    end
+
+    should "return an empty string on invalid inputs" do
+      assert_equal "", User.normalize_email("\u9999".force_encoding("ascii"))
     end
   end
 end
