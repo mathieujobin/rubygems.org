@@ -191,6 +191,8 @@ spec:
               secretKeyRef:
                 name: <%= environment %>
                 key: launch_darkly_sdk_key
+          - name: RUBY_YJIT_ENABLE
+            value: "1"
           <% if environment == 'staging' %>
           - name: DISABLE_SIGNUP
             value: "true"

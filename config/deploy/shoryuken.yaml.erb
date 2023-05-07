@@ -138,5 +138,7 @@ spec:
                 key: database_url
           - name: SQS_QUEUE
             value: "fastly_logs_<%= environment %>"
+          - name: RUBY_YJIT_ENABLE
+            value: "1"
         securityContext:
           privileged: false
