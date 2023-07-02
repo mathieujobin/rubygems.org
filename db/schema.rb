@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.0].define(version: 2023_05_18_182503) do
+ActiveRecord::Schema[7.0].define(version: 2023_07_02_010946) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "hstore"
   enable_extension "pgcrypto"
@@ -100,6 +100,12 @@ ActiveRecord::Schema[7.0].define(version: 2023_05_18_182503) do
     t.index ["count"], name: "index_gem_downloads_on_count", order: :desc
     t.index ["rubygem_id", "version_id"], name: "index_gem_downloads_on_rubygem_id_and_version_id", unique: true
     t.index ["version_id", "rubygem_id", "count"], name: "index_gem_downloads_on_version_id_and_rubygem_id_and_count"
+  end
+
+  create_table "gem_name_reservations", force: :cascade do |t|
+    t.string "name"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
   end
 
   create_table "gem_typo_exceptions", force: :cascade do |t|
