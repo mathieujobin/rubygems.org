@@ -103,9 +103,10 @@ ActiveRecord::Schema[7.0].define(version: 2023_07_02_010946) do
   end
 
   create_table "gem_name_reservations", force: :cascade do |t|
-    t.string "name"
+    t.string "name", null: false
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.index ["name"], name: "index_gem_name_reservations_on_name", unique: true
   end
 
   create_table "gem_typo_exceptions", force: :cascade do |t|
