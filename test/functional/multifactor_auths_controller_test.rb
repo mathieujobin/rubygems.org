@@ -243,6 +243,7 @@ class MultifactorAuthsControllerTest < ActionController::TestCase
           should "disable mfa and clear recovery codes" do
             assert_predicate @user.reload, :totp_disabled?
             assert_empty @user.mfa_recovery_codes
+            assert_empty @user.hashed_mfa_recovery_codes
           end
 
           should "send mfa disabled email" do
@@ -277,6 +278,7 @@ class MultifactorAuthsControllerTest < ActionController::TestCase
           should "keep mfa and recovery codes enabled" do
             assert_predicate @user.reload, :totp_enabled?
             assert_not_empty @user.mfa_recovery_codes
+            assert_not_empty @user.hashed_mfa_recovery_codes
           end
 
           should "flash error" do
@@ -305,7 +307,6 @@ class MultifactorAuthsControllerTest < ActionController::TestCase
           @seed = ROTP::Base32.random_base32
           @controller.session[:mfa_seed] = @seed
           @controller.session[:mfa_seed_expire] = Gemcutter::MFA_KEY_EXPIRY.from_now.utc.to_i
-          @recovery_codes = @user.mfa_recovery_codes
           perform_enqueued_jobs only: ActionMailer::MailDeliveryJob do
             post :create, params: { otp: ROTP::TOTP.new(@seed).now }
           end
@@ -355,7 +356,7 @@ class MultifactorAuthsControllerTest < ActionController::TestCase
 
         context "when user does not have recovery codes" do
           setup do
-            @user.update!(mfa_recovery_codes: [])
+            @user.update!(mfa_recovery_codes: [], hashed_mfa_recovery_codes: [])
             put :update, params: { level: "ui_and_api" }
           end
 
@@ -639,7 +640,7 @@ class MultifactorAuthsControllerTest < ActionController::TestCase
         end
 
         should "not change mfa level and recovery codes" do
-          assert_no_changes -> { @user.reload.mfa_level }, -> { @user.reload.mfa_recovery_codes } do
+          assert_no_changes -> { [@user.reload.mfa_level, @user.reload.mfa_recovery_codes, @user.reload.hashed_mfa_recovery_codes] } do
             delete :destroy
           end
         end
@@ -763,7 +764,7 @@ class MultifactorAuthsControllerTest < ActionController::TestCase
         end
 
         should "not change mfa level and recovery codes" do
-          assert_no_changes -> { @user.reload.mfa_level }, -> { @user.reload.mfa_recovery_codes } do
+          assert_no_changes -> { [@user.reload.mfa_level, @user.reload.mfa_recovery_codes, @user.reload.hashed_mfa_recovery_codes] } do
             delete :destroy
           end
         end

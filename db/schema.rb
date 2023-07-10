@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.0].define(version: 2023_05_18_182503) do
+ActiveRecord::Schema[7.0].define(version: 2023_07_08_003340) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "hstore"
   enable_extension "pgcrypto"
@@ -310,6 +310,7 @@ ActiveRecord::Schema[7.0].define(version: 2023_05_18_182503) do
     t.string "webauthn_id"
     t.string "full_name"
     t.string "totp_seed"
+    t.string "hashed_mfa_recovery_codes", default: [], array: true
     t.index ["email"], name: "index_users_on_email"
     t.index ["handle"], name: "index_users_on_handle"
     t.index ["id", "confirmation_token"], name: "index_users_on_id_and_confirmation_token"
