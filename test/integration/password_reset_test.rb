@@ -5,7 +5,7 @@ class PasswordResetTest < SystemTest
 
   def password_reset_link
     body = ActionMailer::Base.deliveries.last.parts[1].body.decoded.to_s
-    link = %r{http://localhost/users([^";]*)}.match(body)
+    link = %r{http://localhost(?::\d+)?/users([^";]*)}.match(body)
     link[0]
   end
 
@@ -85,12 +85,12 @@ class PasswordResetTest < SystemTest
   end
 
   test "restting password when mfa is enabled" do
-    @user.enable_mfa!(ROTP::Base32.random_base32, :ui_only)
+    @user.enable_totp!(ROTP::Base32.random_base32, :ui_only)
     forgot_password_with @user.email
 
     visit password_reset_link
 
-    fill_in "otp", with: ROTP::TOTP.new(@user.mfa_seed).now
+    fill_in "otp", with: ROTP::TOTP.new(@user.totp_seed).now
     click_button "Authenticate"
 
     fill_in "Password", with: PasswordHelpers::SECURE_TEST_PASSWORD
@@ -100,12 +100,12 @@ class PasswordResetTest < SystemTest
   end
 
   test "resetting a password when mfa is enabled but mfa session is expired" do
-    @user.enable_mfa!(ROTP::Base32.random_base32, :ui_and_gem_signin)
+    @user.enable_totp!(ROTP::Base32.random_base32, :ui_and_gem_signin)
     forgot_password_with @user.email
 
     visit password_reset_link
 
-    fill_in "otp", with: ROTP::TOTP.new(@user.mfa_seed).now
+    fill_in "otp", with: ROTP::TOTP.new(@user.totp_seed).now
     travel 16.minutes do
       click_button "Authenticate"
 
@@ -134,8 +134,29 @@ class PasswordResetTest < SystemTest
     find(:css, ".header__popup-link").click
 
     assert page.has_content?("SIGN OUT")
+  end
 
-    @authenticator.remove!
+  test "resetting password when webauthn is enabled using recovery codes" do
+    create_webauthn_credential
+
+    forgot_password_with @user.email
+
+    visit password_reset_link
+
+    assert page.has_content? "Multi-factor authentication"
+    assert page.has_content? "Security Device"
+    assert page.has_content? "Recovery code"
+    assert_not_nil page.find(".js-webauthn-session--form")[:action]
+
+    fill_in "otp", with: @user.mfa_recovery_codes.first
+    click_button "Authenticate"
+
+    fill_in "Password", with: PasswordHelpers::SECURE_TEST_PASSWORD
+    click_button "Save this password"
+
+    find(:css, ".header__popup-link").click
+
+    assert page.has_content?("SIGN OUT")
   end
 
   test "resetting password with pending email change" do
@@ -171,6 +192,7 @@ class PasswordResetTest < SystemTest
   end
 
   teardown do
+    @authenticator&.remove!
     Capybara.reset_sessions!
     Capybara.use_default_driver
   end

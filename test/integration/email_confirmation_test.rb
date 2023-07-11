@@ -64,7 +64,7 @@ class EmailConfirmationTest < SystemTest
   end
 
   test "requesting confirmation mail with mfa enabled" do
-    @user.enable_mfa!(ROTP::Base32.random_base32, :ui_only)
+    @user.enable_totp!(ROTP::Base32.random_base32, :ui_only)
     request_confirmation_mail @user.email
 
     link = last_email_link
@@ -72,7 +72,7 @@ class EmailConfirmationTest < SystemTest
     assert_not_nil link
     visit link
 
-    fill_in "otp", with: ROTP::TOTP.new(@user.mfa_seed).now
+    fill_in "otp", with: ROTP::TOTP.new(@user.totp_seed).now
     click_button "Authenticate"
 
     assert page.has_content? "Sign out"
@@ -98,12 +98,11 @@ class EmailConfirmationTest < SystemTest
     find(:css, ".header__popup-link").click
 
     assert page.has_content?("SIGN OUT")
-
-    @authenticator.remove!
   end
 
-  test "requesting confirmation mail with mfa enabled, but mfa session is expired" do
-    @user.enable_mfa!(ROTP::Base32.random_base32, :ui_and_gem_signin)
+  test "requesting confirmation mail with webauthn enabled using recovery codes" do
+    create_webauthn_credential
+
     request_confirmation_mail @user.email
 
     link = last_email_link
@@ -111,7 +110,27 @@ class EmailConfirmationTest < SystemTest
     assert_not_nil link
     visit link
 
-    fill_in "otp", with: ROTP::TOTP.new(@user.mfa_seed).now
+    assert page.has_content? "Multi-factor authentication"
+    assert page.has_content? "Security Device"
+
+    fill_in "otp", with: @user.mfa_recovery_codes.first
+    click_button "Authenticate"
+
+    find(:css, ".header__popup-link").click
+
+    assert page.has_content?("SIGN OUT")
+  end
+
+  test "requesting confirmation mail with mfa enabled, but mfa session is expired" do
+    @user.enable_totp!(ROTP::Base32.random_base32, :ui_and_gem_signin)
+    request_confirmation_mail @user.email
+
+    link = last_email_link
+
+    assert_not_nil link
+    visit link
+
+    fill_in "otp", with: ROTP::TOTP.new(@user.totp_seed).now
     travel 16.minutes do
       click_button "Authenticate"
 
@@ -120,6 +139,7 @@ class EmailConfirmationTest < SystemTest
   end
 
   teardown do
+    @authenticator&.remove!
     Capybara.reset_sessions!
     Capybara.use_default_driver
   end

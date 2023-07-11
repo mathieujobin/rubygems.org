@@ -1,6 +1,5 @@
 class User < ApplicationRecord
   include UserMultifactorMethods
-  include UserWebauthnMethods
   include Clearance::User
   include Gravtastic
   is_gravtastic default: "retro"
@@ -190,7 +189,7 @@ class User < ApplicationRecord
   def generate_confirmation_token(reset_unconfirmed_email: true)
     self.unconfirmed_email = nil if reset_unconfirmed_email
     self.confirmation_token = Clearance::Token.new
-    self.token_expires_at = Time.zone.now + Gemcutter::EMAIL_TOKEN_EXPRIES_AFTER
+    self.token_expires_at = Time.zone.now + Gemcutter::EMAIL_TOKEN_EXPIRES_AFTER
   end
 
   def _generate_confirmation_token_no_reset_unconfirmed_email
@@ -222,7 +221,7 @@ class User < ApplicationRecord
     transaction do
       update_attribute(:email, "security+locked-#{SecureRandom.hex(4)}-#{display_handle.downcase}@rubygems.org")
       confirm_email!
-      disable_mfa!
+      disable_totp!
       update_attribute(:password, SecureRandom.alphanumeric)
       update!(
         remember_token: nil,

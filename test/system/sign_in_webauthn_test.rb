@@ -4,10 +4,10 @@ class SignInWebauthnTest < ApplicationSystemTestCase
   setup do
     @user = create(:user, email: "nick@example.com", password: PasswordHelpers::SECURE_TEST_PASSWORD, handle: nil)
     @mfa_user = create(:user, email: "john@example.com", password: PasswordHelpers::SECURE_TEST_PASSWORD,
-                  mfa_level: :ui_only, mfa_seed: "thisisonemfaseed",
+                  mfa_level: :ui_only, totp_seed: "thisisonetotpseed",
                   mfa_recovery_codes: %w[0123456789ab ba9876543210])
 
-    @authenticator = create_webauthn_authenticator
+    @authenticator = create_webauthn_credential
   end
 
   teardown do
@@ -51,26 +51,19 @@ class SignInWebauthnTest < ApplicationSystemTestCase
     end
   end
 
-  def create_webauthn_authenticator
+  test "sign in with webauthn using recovery codes" do
     visit sign_in_path
-    fill_in "Email or Username", with: @user.reload.email
+
+    fill_in "Email or Username", with: @user.email
     fill_in "Password", with: @user.password
     click_button "Sign in"
-    visit edit_settings_path
 
-    options = ::Selenium::WebDriver::VirtualAuthenticatorOptions.new
-    authenticator = page.driver.browser.add_virtual_authenticator(options)
-    WebAuthn::PublicKeyCredentialWithAttestation.any_instance.stubs(:verify).returns true
+    assert page.has_content? "Multi-factor authentication"
+    assert page.has_content? "Security Device"
 
-    credential_nickname = "new cred"
-    fill_in "Nickname", with: credential_nickname
-    click_on "Register device"
+    fill_in "otp", with: @user.mfa_recovery_codes.first
+    click_button "Verify code"
 
-    find("div", text: credential_nickname, match: :first)
-
-    find(:css, ".header__popup-link").click
-    click_on "Sign out"
-
-    authenticator
+    assert page.has_content? "Dashboard"
   end
 end

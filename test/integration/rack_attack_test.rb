@@ -158,15 +158,15 @@ class RackAttackTest < ActionDispatch::IntegrationTest
 
       context "ui requests" do
         setup do
-          @user.enable_mfa!(ROTP::Base32.random_base32, :ui_only)
+          @user.enable_totp!(ROTP::Base32.random_base32, :ui_only)
           stay_under_exponential_limit("clearance/ip")
         end
 
         should "allow for mfa sign in" do
           post "/session", params: { session: { who: @user.handle, password: @user.password } } # sets session[:mfa_user]
 
-          post "/session/mfa_create",
-            params: { otp: ROTP::TOTP.new(@user.mfa_seed).now },
+          post "/session/otp_create",
+            params: { otp: ROTP::TOTP.new(@user.totp_seed).now },
             headers: { REMOTE_ADDR: @ip_address }
 
           assert_redirected_to "/dashboard"
@@ -176,8 +176,8 @@ class RackAttackTest < ActionDispatch::IntegrationTest
           @user.forgot_password!
           get "/users/#{@user.id}/password/edit",
             params: { token: @user.confirmation_token, user_id: @user.id }
-          post "/users/#{@user.id}/password/mfa_edit",
-            params: { token: @user.confirmation_token, otp: ROTP::TOTP.new(@user.mfa_seed).now },
+          post "/users/#{@user.id}/password/otp_edit",
+            params: { token: @user.confirmation_token, otp: ROTP::TOTP.new(@user.totp_seed).now },
             headers: { REMOTE_ADDR: @ip_address }
 
           assert_response :ok
@@ -194,7 +194,7 @@ class RackAttackTest < ActionDispatch::IntegrationTest
 
       context "api requests" do
         setup do
-          @user.enable_mfa!(ROTP::Base32.random_base32, :ui_and_api)
+          @user.enable_totp!(ROTP::Base32.random_base32, :ui_and_api)
           stay_under_exponential_limit("api/ip")
 
           create(:api_key, key: "12334", add_owner: true, yank_rubygem: true, remove_owner: true, user: @user)
@@ -205,7 +205,7 @@ class RackAttackTest < ActionDispatch::IntegrationTest
         should "allow gem yank by ip" do
           delete "/api/v1/gems/yank",
             params: { gem_name: @rubygem.to_param, version: @rubygem.latest_version.number },
-            headers: { REMOTE_ADDR: @ip_address, HTTP_AUTHORIZATION: "12334", HTTP_OTP: ROTP::TOTP.new(@user.mfa_seed).now }
+            headers: { REMOTE_ADDR: @ip_address, HTTP_AUTHORIZATION: "12334", HTTP_OTP: ROTP::TOTP.new(@user.totp_seed).now }
 
           assert_response :success
         end
@@ -215,7 +215,7 @@ class RackAttackTest < ActionDispatch::IntegrationTest
 
           post "/api/v1/gems/#{@rubygem.name}/owners",
             params: { rubygem_id: @rubygem.to_param, email: second_user.email },
-            headers: { REMOTE_ADDR: @ip_address, HTTP_AUTHORIZATION: "12334", HTTP_OTP: ROTP::TOTP.new(@user.mfa_seed).now }
+            headers: { REMOTE_ADDR: @ip_address, HTTP_AUTHORIZATION: "12334", HTTP_OTP: ROTP::TOTP.new(@user.totp_seed).now }
 
           assert_response :success
         end
@@ -226,7 +226,7 @@ class RackAttackTest < ActionDispatch::IntegrationTest
 
           delete "/api/v1/gems/#{@rubygem.name}/owners",
             params: { rubygem_id: @rubygem.to_param, email: second_user.email },
-            headers: { REMOTE_ADDR: @ip_address, HTTP_AUTHORIZATION: "12334", HTTP_OTP: ROTP::TOTP.new(@user.mfa_seed).now }
+            headers: { REMOTE_ADDR: @ip_address, HTTP_AUTHORIZATION: "12334", HTTP_OTP: ROTP::TOTP.new(@user.totp_seed).now }
 
           assert_response :success
         end
@@ -432,7 +432,7 @@ class RackAttackTest < ActionDispatch::IntegrationTest
     context "exponential backoff" do
       setup do
         @mfa_max_period = { 1 => 300, 2 => 90_000 }
-        @user.enable_mfa!(ROTP::Base32.random_base32, :ui_only)
+        @user.enable_totp!(ROTP::Base32.random_base32, :ui_only)
         @api_key = "12345"
         create(:api_key, key: @api_key, user: @user)
       end
@@ -441,7 +441,7 @@ class RackAttackTest < ActionDispatch::IntegrationTest
         should "throttle for mfa sign in at level #{level}" do
           freeze_time do
             exceed_exponential_limit_for("clearance/ip/#{level}", level)
-            post "/session/mfa_create", headers: { REMOTE_ADDR: @ip_address }
+            post "/session/otp_create", headers: { REMOTE_ADDR: @ip_address }
 
             assert_throttle_at(level)
           end
@@ -452,7 +452,7 @@ class RackAttackTest < ActionDispatch::IntegrationTest
             # sign page sets mfa_user in session
             post session_path(session: { who: @user.handle, password: PasswordHelpers::SECURE_TEST_PASSWORD })
             exceed_exponential_user_limit_for("clearance/user/#{level}", @user.id, level)
-            post "/session/mfa_create"
+            post "/session/otp_create"
 
             assert_throttle_at(level)
           end
@@ -547,7 +547,7 @@ class RackAttackTest < ActionDispatch::IntegrationTest
         should "throttle mfa forgot password at level #{level}" do
           freeze_time do
             exceed_exponential_limit_for("clearance/ip/#{level}", level)
-            post "/users/#{@user.id}/password/mfa_edit", headers: { REMOTE_ADDR: @ip_address }
+            post "/users/#{@user.id}/password/otp_edit", headers: { REMOTE_ADDR: @ip_address }
 
             assert_throttle_at(level)
           end
@@ -558,8 +558,8 @@ class RackAttackTest < ActionDispatch::IntegrationTest
             @user.forgot_password!
             exceed_exponential_user_limit_for("clearance/user/#{level}", @user.confirmation_token, level)
 
-            post "/users/#{@user.id}/password/mfa_edit",
-              params: { token: @user.confirmation_token, otp: ROTP::TOTP.new(@user.mfa_seed).now }
+            post "/users/#{@user.id}/password/otp_edit",
+              params: { token: @user.confirmation_token, otp: ROTP::TOTP.new(@user.totp_seed).now }
 
             assert_throttle_at(level)
           end
@@ -699,7 +699,7 @@ class RackAttackTest < ActionDispatch::IntegrationTest
 
   def sign_in_as(user)
     post session_path(session: { who: user.handle, password: PasswordHelpers::SECURE_TEST_PASSWORD })
-    post "/session/mfa_create", params: { otp: ROTP::TOTP.new(@user.mfa_seed).now } if user.mfa_enabled?
+    post "/session/otp_create", params: { otp: ROTP::TOTP.new(@user.totp_seed).now } if user.mfa_enabled?
   end
 
   def set_owners_session(_rubygem, user)

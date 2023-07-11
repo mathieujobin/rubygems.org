@@ -14,7 +14,7 @@ class MultifactorAuthsTest < ApplicationSystemTestCase
   end
 
   teardown do
-    @user.disable_mfa!
+    @user.disable_totp!
   end
 
   test "user with mfa disabled gets redirected back to adoptions after setting up mfa" do
@@ -104,13 +104,15 @@ class MultifactorAuthsTest < ApplicationSystemTestCase
 
   def redirect_test_mfa_weak_level(path)
     sign_in
-    @user.enable_mfa!(@seed, :ui_only)
+    @user.enable_totp!(@seed, :ui_only)
     visit path
 
     assert page.has_content? "Edit settings"
 
-    fill_in "otp", with: @totp.now
     change_auth_level "UI and gem signin"
+    fill_in "otp", with: @totp.now
+
+    click_button "Authenticate"
 
     yield if block_given?
 

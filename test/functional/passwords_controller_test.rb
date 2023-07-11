@@ -36,7 +36,7 @@ class PasswordsControllerTest < ActionController::TestCase
       should respond_with :success
 
       should "display edit form" do
-        assert page.has_content?("Reset password")
+        page.assert_text("Reset password")
       end
     end
 
@@ -53,40 +53,95 @@ class PasswordsControllerTest < ActionController::TestCase
       end
     end
 
-    context "with mfa enabled" do
+    context "with totp enabled" do
       setup do
-        @user.mfa_ui_only!
+        @user.enable_totp!(ROTP::Base32.random_base32, :ui_only)
         get :edit, params: { token: @user.confirmation_token, user_id: @user.id }
-        @controller.session[:mfa_expires_at] = 15.minutes.from_now.to_s
       end
 
       should respond_with :success
 
       should "display otp form" do
         assert page.has_content?("Multi-factor authentication")
+        assert page.has_content?("OTP code")
+        assert page.has_button?("Authenticate")
+      end
+    end
+
+    context "when user has webauthn credentials but no recovery codes" do
+      setup do
+        create(:webauthn_credential, user: @user)
+        @user.mfa_recovery_codes = []
+        @user.save!
+        get :edit, params: { token: @user.confirmation_token, user_id: @user.id }
+      end
+
+      should respond_with :success
+
+      should "display webauthn prompt" do
+        assert page.has_button?("Authenticate with security device")
+      end
+
+      should "not display recovery code prompt" do
+        refute page.has_content?("Recovery code")
+      end
+    end
+
+    context "when user has webauthn credentials and recovery codes" do
+      setup do
+        create(:webauthn_credential, user: @user)
+        get :edit, params: { token: @user.confirmation_token, user_id: @user.id }
+      end
+
+      should respond_with :success
+
+      should "display webauthn prompt" do
+        assert page.has_button?("Authenticate with security device")
+      end
+
+      should "display recovery code prompt" do
+        assert page.has_content?("Recovery code")
+      end
+    end
+
+    context "when user has webauthn and totp" do
+      setup do
+        @user.enable_totp!(ROTP::Base32.random_base32, :ui_and_api)
+        create(:webauthn_credential, user: @user)
+        get :edit, params: { token: @user.confirmation_token, user_id: @user.id }
+      end
+
+      should respond_with :success
+
+      should "display webauthn prompt" do
+        assert page.has_button?("Authenticate with security device")
+      end
+
+      should "display otp prompt" do
+        assert page.has_content?("OTP or recovery code")
       end
     end
   end
 
-  context "on POST to mfa_edit" do
+  context "on POST to otp_edit" do
     setup do
       @user = create(:user)
       @user.forgot_password!
     end
 
     context "with mfa enabled" do
-      setup { @user.enable_mfa!(ROTP::Base32.random_base32, :ui_only) }
+      setup { @user.enable_totp!(ROTP::Base32.random_base32, :ui_only) }
 
       context "when OTP is correct" do
         setup do
           get :edit, params: { token: @user.confirmation_token, user_id: @user.id }
-          post :mfa_edit, params: { user_id: @user.id, token: @user.confirmation_token, otp: ROTP::TOTP.new(@user.mfa_seed).now }
+          post :otp_edit, params: { user_id: @user.id, token: @user.confirmation_token, otp: ROTP::TOTP.new(@user.totp_seed).now }
         end
 
         should respond_with :success
 
         should "display edit form" do
-          assert page.has_content?("Reset password")
+          page.assert_text("Reset password")
         end
         should "clear mfa_expires_at" do
           assert_nil @controller.session[:mfa_expires_at]
@@ -96,7 +151,7 @@ class PasswordsControllerTest < ActionController::TestCase
       context "when OTP is incorrect" do
         setup do
           get :edit, params: { token: @user.confirmation_token, user_id: @user.id }
-          post :mfa_edit, params: { user_id: @user.id, token: @user.confirmation_token, otp: "eatthis" }
+          post :otp_edit, params: { user_id: @user.id, token: @user.confirmation_token, otp: "eatthis" }
         end
 
         should respond_with :unauthorized
@@ -110,7 +165,7 @@ class PasswordsControllerTest < ActionController::TestCase
         setup do
           get :edit, params: { token: @user.confirmation_token, user_id: @user.id }
           travel 16.minutes do
-            post :mfa_edit, params: { user_id: @user.id, token: @user.confirmation_token, otp: ROTP::TOTP.new(@user.mfa_seed).now }
+            post :otp_edit, params: { user_id: @user.id, token: @user.confirmation_token, otp: ROTP::TOTP.new(@user.totp_seed).now }
           end
         end
 
@@ -122,7 +177,7 @@ class PasswordsControllerTest < ActionController::TestCase
         end
 
         should "render sign in page" do
-          assert page.has_content? "Sign in"
+          page.assert_text "Sign in"
         end
 
         should "not sign in the user" do
@@ -166,7 +221,7 @@ class PasswordsControllerTest < ActionController::TestCase
       should respond_with :success
 
       should "display edit form" do
-        assert page.has_content?("Reset password")
+        page.assert_text("Reset password")
       end
 
       should "clear mfa_expires_at" do
@@ -248,7 +303,7 @@ class PasswordsControllerTest < ActionController::TestCase
       end
 
       should "render sign in page" do
-        assert page.has_content? "Sign in"
+        page.assert_text "Sign in"
       end
 
       should "not sign in the user" do

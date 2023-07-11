@@ -51,8 +51,6 @@ module Gemcutter
       RubygemFs.s3! ENV["S3_PROXY"] if ENV["S3_PROXY"]
     end
 
-    config.plugins = [:dynamic_form]
-
     config.eager_load_paths << Rails.root.join("lib")
     config.toxic_domains_filepath = Rails.root.join("vendor", "toxic_domains_whole.txt")
 
@@ -65,7 +63,7 @@ module Gemcutter
 
   DEFAULT_PAGE = 1
   DEFAULT_PAGINATION = 20
-  EMAIL_TOKEN_EXPRIES_AFTER = 3.hours
+  EMAIL_TOKEN_EXPIRES_AFTER = 3.hours
   HOST = config["host"]
   NEWS_DAYS_LIMIT = 7.days
   NEWS_MAX_PAGES = 10

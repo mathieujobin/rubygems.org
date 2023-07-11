@@ -354,18 +354,18 @@ class UserTest < ActiveSupport::TestCase
 
       context "when enabled" do
         setup do
-          @user.enable_mfa!(ROTP::Base32.random_base32, :ui_only)
+          @user.enable_totp!(ROTP::Base32.random_base32, :ui_only)
         end
 
         should "be able to use a recovery code only once" do
           code = @user.mfa_recovery_codes.first
 
-          assert @user.ui_otp_verified?(code)
-          refute @user.ui_otp_verified?(code)
+          assert @user.ui_mfa_verified?(code)
+          refute @user.ui_mfa_verified?(code)
         end
 
         should "be able to verify correct OTP" do
-          assert @user.ui_otp_verified?(ROTP::TOTP.new(@user.mfa_seed).now)
+          assert @user.ui_mfa_verified?(ROTP::TOTP.new(@user.totp_seed).now)
         end
 
         should "return true for mfa status check" do
@@ -374,22 +374,22 @@ class UserTest < ActiveSupport::TestCase
         end
 
         should "return true for otp in last interval" do
-          last_otp = ROTP::TOTP.new(@user.mfa_seed).at(Time.current - 30)
+          last_otp = ROTP::TOTP.new(@user.totp_seed).at(Time.current - 30)
 
-          assert @user.ui_otp_verified?(last_otp)
+          assert @user.ui_mfa_verified?(last_otp)
         end
 
         should "return true for otp in next interval" do
-          next_otp = ROTP::TOTP.new(@user.mfa_seed).at(Time.current + 30)
+          next_otp = ROTP::TOTP.new(@user.totp_seed).at(Time.current + 30)
 
-          assert @user.ui_otp_verified?(next_otp)
+          assert @user.ui_mfa_verified?(next_otp)
         end
 
         context "blocking user with api key" do
           setup { create(:api_key, user: @user) }
 
           should "reset email and mfa" do
-            assert_changed(@user, :email, :password, :api_key, :mfa_seed, :remember_token) do
+            assert_changed(@user, :email, :password, :api_key, :totp_seed, :remember_token) do
               @user.block!
             end
 
@@ -410,11 +410,11 @@ class UserTest < ActiveSupport::TestCase
 
       context "when disabled" do
         setup do
-          @user.disable_mfa!
+          @user.disable_totp!
         end
 
         should "return false for verifying OTP" do
-          refute @user.ui_otp_verified?("")
+          refute @user.ui_mfa_verified?("")
         end
 
         should "return false for mfa status check" do
@@ -493,7 +493,7 @@ class UserTest < ActiveSupport::TestCase
 
       context "when mfa `ui_only` user owns a gem with more downloads than the recommended threshold but less than the required threshold" do
         setup do
-          @user.enable_mfa!(ROTP::Base32.random_base32, :ui_only)
+          @user.enable_totp!(ROTP::Base32.random_base32, :ui_only)
 
           GemDownload.increment(
             Rubygem::MFA_RECOMMENDED_THRESHOLD + 1,
@@ -516,7 +516,7 @@ class UserTest < ActiveSupport::TestCase
 
       context "when mfa `ui_only` user owns a gem with more downloads than the required threshold" do
         setup do
-          @user.enable_mfa!(ROTP::Base32.random_base32, :ui_only)
+          @user.enable_totp!(ROTP::Base32.random_base32, :ui_only)
 
           GemDownload.increment(
             Rubygem::MFA_REQUIRED_THRESHOLD + 1,
@@ -535,7 +535,7 @@ class UserTest < ActiveSupport::TestCase
 
       context "when strong user owns a gem with more downloads than the recommended threshold but less than the required threshold" do
         setup do
-          @user.enable_mfa!(ROTP::Base32.random_base32, :ui_and_api)
+          @user.enable_totp!(ROTP::Base32.random_base32, :ui_and_api)
 
           GemDownload.increment(
             Rubygem::MFA_RECOMMENDED_THRESHOLD + 1,
@@ -558,7 +558,7 @@ class UserTest < ActiveSupport::TestCase
 
       context "when strong user owns a gem with more downloads than the required threshold" do
         setup do
-          @user.enable_mfa!(ROTP::Base32.random_base32, :ui_and_api)
+          @user.enable_totp!(ROTP::Base32.random_base32, :ui_and_api)
 
           GemDownload.increment(
             Rubygem::MFA_REQUIRED_THRESHOLD + 1,
@@ -828,7 +828,7 @@ class UserTest < ActiveSupport::TestCase
     setup { @user = create(:user, handle: "MikeJudge") }
 
     should "not raise ActiveRecord::RecordInvalid for email address already taken" do
-      assert_changed(@user, :email, :password, :api_key, :mfa_seed, :remember_token) do
+      assert_changed(@user, :email, :password, :api_key, :totp_seed, :remember_token) do
         @user.block!
       end
     end

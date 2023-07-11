@@ -4,7 +4,7 @@ class SessionsControllerTest < ActionController::TestCase
   context "when user has mfa enabled" do
     setup do
       @user = User.new(email_confirmed: true, handle: "test")
-      @user.enable_mfa!(ROTP::Base32.random_base32, :ui_only)
+      @user.enable_totp!(ROTP::Base32.random_base32, :ui_only)
     end
 
     context "on POST to create" do
@@ -32,7 +32,7 @@ class SessionsControllerTest < ActionController::TestCase
       end
     end
 
-    context "on POST to mfa_create" do
+    context "on POST to otp_create" do
       setup do
         @current_time = Time.utc(2023, 1, 1, 0, 0, 0)
         travel_to @current_time
@@ -45,7 +45,7 @@ class SessionsControllerTest < ActionController::TestCase
       context "when OTP is correct" do
         setup do
           @controller.session[:mfa_user] = @user.id
-          post :mfa_create, params: { otp: ROTP::TOTP.new(@user.mfa_seed).now }
+          post :otp_create, params: { otp: ROTP::TOTP.new(@user.totp_seed).now }
         end
 
         should respond_with :redirect
@@ -63,7 +63,7 @@ class SessionsControllerTest < ActionController::TestCase
       context "when OTP is recovery code" do
         setup do
           @controller.session[:mfa_user] = @user.id
-          post :mfa_create, params: { otp: @user.mfa_recovery_codes.first }
+          post :otp_create, params: { otp: @user.mfa_recovery_codes.first }
         end
 
         should respond_with :redirect
@@ -81,8 +81,8 @@ class SessionsControllerTest < ActionController::TestCase
       context "when OTP is incorrect" do
         setup do
           @controller.session[:mfa_user] = @user.id
-          wrong_otp = (ROTP::TOTP.new(@user.mfa_seed).now.to_i.succ % 1_000_000).to_s
-          post :mfa_create, params: { otp: wrong_otp }
+          wrong_otp = (ROTP::TOTP.new(@user.totp_seed).now.to_i.succ % 1_000_000).to_s
+          post :otp_create, params: { otp: wrong_otp }
         end
 
         should set_flash.now[:notice]
@@ -113,7 +113,7 @@ class SessionsControllerTest < ActionController::TestCase
           StatsD.expects(:distribution).with("login.mfa.otp.duration", @duration)
 
           travel_to @end_time do
-            post :mfa_create, params: { otp: ROTP::TOTP.new(@user.mfa_seed).now }
+            post :otp_create, params: { otp: ROTP::TOTP.new(@user.totp_seed).now }
           end
         end
 
@@ -121,7 +121,7 @@ class SessionsControllerTest < ActionController::TestCase
           StatsD.expects(:distribution).with("login.mfa.otp.duration", @duration)
 
           travel_to @end_time do
-            post :mfa_create, params: { otp: @user.mfa_recovery_codes.first }
+            post :otp_create, params: { otp: @user.mfa_recovery_codes.first }
           end
         end
       end
@@ -137,7 +137,7 @@ class SessionsControllerTest < ActionController::TestCase
         @controller.session[:mfa_expires_at] = 15.minutes.from_now.to_s
         travel 30.minutes
 
-        post :mfa_create, params: { otp: ROTP::TOTP.new(@user.mfa_seed).now }
+        post :otp_create, params: { otp: ROTP::TOTP.new(@user.totp_seed).now }
       end
 
       should set_flash.now[:notice]
@@ -164,7 +164,7 @@ class SessionsControllerTest < ActionController::TestCase
       setup do
         @controller.session[:mfa_user] = @user.id
         travel 30.minutes do
-          post :mfa_create, params: { otp: ROTP::TOTP.new(@user.mfa_seed).now }
+          post :otp_create, params: { otp: ROTP::TOTP.new(@user.totp_seed).now }
         end
       end
 
@@ -226,8 +226,8 @@ class SessionsControllerTest < ActionController::TestCase
 
           context "on `ui_only` level" do
             setup do
-              @user.enable_mfa!(ROTP::Base32.random_base32, :ui_only)
-              post :mfa_create, params: { otp: ROTP::TOTP.new(@user.mfa_seed).now }
+              @user.enable_totp!(ROTP::Base32.random_base32, :ui_only)
+              post :otp_create, params: { otp: ROTP::TOTP.new(@user.totp_seed).now }
             end
 
             should respond_with :redirect
@@ -244,8 +244,8 @@ class SessionsControllerTest < ActionController::TestCase
 
           context "on `ui_and_gem_signin` level" do
             setup do
-              @user.enable_mfa!(ROTP::Base32.random_base32, :ui_and_gem_signin)
-              post :mfa_create, params: { otp: ROTP::TOTP.new(@user.mfa_seed).now }
+              @user.enable_totp!(ROTP::Base32.random_base32, :ui_and_gem_signin)
+              post :otp_create, params: { otp: ROTP::TOTP.new(@user.totp_seed).now }
             end
 
             should respond_with :redirect
@@ -254,8 +254,8 @@ class SessionsControllerTest < ActionController::TestCase
 
           context "on `ui_and_api` level" do
             setup do
-              @user.enable_mfa!(ROTP::Base32.random_base32, :ui_and_api)
-              post :mfa_create, params: { otp: ROTP::TOTP.new(@user.mfa_seed).now }
+              @user.enable_totp!(ROTP::Base32.random_base32, :ui_and_api)
+              post :otp_create, params: { otp: ROTP::TOTP.new(@user.totp_seed).now }
             end
 
             should respond_with :redirect
@@ -347,14 +347,50 @@ class SessionsControllerTest < ActionController::TestCase
         assert_not_nil session[:webauthn_authentication]["challenge"]
       end
 
-      should "not set mfa_user" do
-        assert_nil session[:mfa_user]
+      should "set mfa_user" do
+        assert_equal @user.id, session[:mfa_user]
+      end
+
+      should "have recovery code form if user has recovery codes" do
+        assert page.has_content?("Multi-factor authentication")
+        assert page.has_content?("Recovery code")
+        assert page.has_button?("Verify code")
       end
 
       should "not have mfa forms and have webauthn credentials form" do
         assert page.has_content?("Multi-factor authentication")
         assert_not page.has_field?("OTP code")
-        assert_not page.has_field?("Recovery code")
+        assert page.has_button?("Authenticate with security device")
+      end
+    end
+
+    context "when user has webauthn credentials but no recovery code" do
+      setup do
+        @user = create(:user)
+        create(:webauthn_credential, user: @user)
+        @user.mfa_recovery_codes = []
+        @user.save!
+        post(
+          :create,
+          params: { session: { who: @user.handle, password: @user.password } }
+        )
+      end
+
+      should respond_with :ok
+
+      should "set webauthn authentication" do
+        assert_equal @user.id, session[:webauthn_authentication]["user"]
+        assert_not_nil session[:webauthn_authentication]["challenge"]
+      end
+
+      should "set mfa_user" do
+        assert_equal @user.id, session[:mfa_user]
+      end
+
+      should "not have mfa forms and have webauthn credentials form" do
+        assert page.has_content?("Multi-factor authentication")
+        assert_not page.has_field?("OTP code")
+        assert_not page.has_content?("Recovery code")
         assert page.has_button?("Authenticate with security device")
       end
     end
@@ -651,7 +687,7 @@ class SessionsControllerTest < ActionController::TestCase
 
     context "user has mfa set to weak level" do
       setup do
-        @user.enable_mfa!(ROTP::Base32.random_base32, :ui_only)
+        @user.enable_totp!(ROTP::Base32.random_base32, :ui_only)
       end
 
       context "on GET to verify" do
@@ -677,7 +713,7 @@ class SessionsControllerTest < ActionController::TestCase
 
     context "user has MFA set to strong level, expect normal behaviour" do
       setup do
-        @user.enable_mfa!(ROTP::Base32.random_base32, :ui_and_api)
+        @user.enable_totp!(ROTP::Base32.random_base32, :ui_and_api)
       end
 
       context "on GET to verify" do

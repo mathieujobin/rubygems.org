@@ -223,6 +223,14 @@ de:
       subject:
       title:
       subtitle:
+    totp_enabled:
+      subject:
+      title:
+      subtitle:
+    totp_disabled:
+      subject:
+      title:
+      subtitle:
     email_reset_update:
       subject:
       title:
@@ -336,13 +344,16 @@ de:
     incorrect_otp:
     session_expired:
     otp_code:
-    require_mfa_disabled:
+    otp_or_recovery:
+    recovery_code:
+    require_totp_disabled:
     require_mfa_enabled:
+    require_totp_enabled:
+    require_webauthn_enabled:
     setup_required_html:
     setup_recommended:
     strong_mfa_level_required_html:
     strong_mfa_level_recommended:
-    ui_only_warning:
     new:
       title:
       scan_prompt:
@@ -362,9 +373,11 @@ de:
       copy:
       saved:
       note_html:
+      already_generated:
     destroy:
       success:
     update:
+      invalid_level:
       success:
   notifiers:
     update:
@@ -444,8 +457,10 @@ de:
         otp:
         disabled_html:
         go_settings:
-        enabled_html:
+        level_html:
+        enabled:
         update:
+        disable:
         level:
           title:
           disabled:
@@ -557,6 +572,7 @@ de:
     index:
       title:
       subtitle:
+      no_reverse_dependencies:
     search:
       search_reverse_dependencies_html:
   searches:
@@ -589,6 +605,7 @@ de:
       sign_in_with_webauthn_credential:
       otp_code:
       otp_or_recovery:
+      recovery_code:
       security_device:
       verify_code:
   stats:
@@ -669,6 +686,8 @@ de:
     create_req:
     signin_to_create_html:
   webauthn_credentials:
+    callback:
+      success:
     recovery:
       continue:
       title:

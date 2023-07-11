@@ -29,7 +29,7 @@ class Avo::UsersSystemTest < ApplicationSystemTestCase
     sign_in_as admin_user
 
     user = create(:user)
-    user.enable_mfa!(ROTP::Base32.random_base32, :ui_and_api)
+    user.enable_totp!(ROTP::Base32.random_base32, :ui_and_api)
     user_attributes = user.attributes.with_indifferent_access
 
     visit avo.resources_user_path(user)
@@ -50,14 +50,14 @@ class Avo::UsersSystemTest < ApplicationSystemTestCase
 
     page.assert_no_text user.encrypted_password
     page.assert_no_text user_attributes[:encrypted_password]
-    page.assert_no_text user_attributes[:mfa_seed]
+    page.assert_no_text user_attributes[:totp_seed]
     page.assert_no_text user_attributes[:mfa_recovery_codes].first
 
     user.reload
 
     assert_equal "disabled", user.mfa_level
     assert_not_equal user_attributes[:encrypted_password], user.encrypted_password
-    assert_empty user.mfa_seed
+    assert_empty user.totp_seed
     assert_empty user.mfa_recovery_codes
 
     audit = user.audits.sole
@@ -72,12 +72,12 @@ class Avo::UsersSystemTest < ApplicationSystemTestCase
             "changes" => {
               "mfa_level" => %w[ui_and_api disabled],
               "updated_at" => [user_attributes[:updated_at].as_json, user.updated_at.as_json],
-              "mfa_seed" => [user_attributes[:mfa_seed], ""],
+              "totp_seed" => [user_attributes[:totp_seed], ""],
               "mfa_recovery_codes" => [user_attributes[:mfa_recovery_codes], []],
               "encrypted_password" => [user_attributes[:encrypted_password], user.encrypted_password]
             },
             "unchanged" => user.attributes
-              .except("mfa_level", "updated_at", "mfa_seed", "mfa_recovery_codes", "encrypted_password")
+              .except("mfa_level", "updated_at", "totp_seed", "mfa_recovery_codes", "encrypted_password")
               .transform_values(&:as_json)
           }
         },
@@ -97,7 +97,7 @@ class Avo::UsersSystemTest < ApplicationSystemTestCase
     sign_in_as admin_user
 
     user = create(:user)
-    user.enable_mfa!(ROTP::Base32.random_base32, :ui_and_api)
+    user.enable_totp!(ROTP::Base32.random_base32, :ui_and_api)
     user_attributes = user.attributes.with_indifferent_access
 
     visit avo.resources_user_path(user)
@@ -118,14 +118,14 @@ class Avo::UsersSystemTest < ApplicationSystemTestCase
 
     page.assert_no_text user.encrypted_password
     page.assert_no_text user_attributes[:encrypted_password]
-    page.assert_no_text user_attributes[:mfa_seed]
+    page.assert_no_text user_attributes[:totp_seed]
     page.assert_no_text user_attributes[:mfa_recovery_codes].first
 
     user.reload
 
     assert_equal "disabled", user.mfa_level
     assert_not_equal user_attributes[:encrypted_password], user.encrypted_password
-    assert_empty user.mfa_seed
+    assert_empty user.totp_seed
     assert_empty user.mfa_recovery_codes
 
     audit = user.audits.sole
@@ -142,7 +142,7 @@ class Avo::UsersSystemTest < ApplicationSystemTestCase
               "updated_at" => [user_attributes[:updated_at].as_json, user.updated_at.as_json],
               "confirmation_token" => [user_attributes[:confirmation_token], nil],
               "mfa_level" => %w[ui_and_api disabled],
-              "mfa_seed" => [user_attributes[:mfa_seed], ""],
+              "totp_seed" => [user_attributes[:totp_seed], ""],
               "mfa_recovery_codes" => [user_attributes[:mfa_recovery_codes], []],
               "encrypted_password" => [user_attributes[:encrypted_password], user.encrypted_password],
               "api_key" => ["secret123", nil],
@@ -158,7 +158,7 @@ class Avo::UsersSystemTest < ApplicationSystemTestCase
                 "encrypted_password",
                 "mfa_level",
                 "mfa_recovery_codes",
-                "mfa_seed",
+                "totp_seed",
                 "remember_token",
                 "updated_at"
               ).transform_values(&:as_json)
@@ -247,7 +247,7 @@ class Avo::UsersSystemTest < ApplicationSystemTestCase
     rubygem = ownership.rubygem
     version = create(:version, rubygem: rubygem)
 
-    user.enable_mfa!(ROTP::Base32.random_base32, :ui_and_api)
+    user.enable_totp!(ROTP::Base32.random_base32, :ui_and_api)
     version_attributes = version.attributes.with_indifferent_access
 
     visit avo.resources_user_path(user)
@@ -332,7 +332,7 @@ class Avo::UsersSystemTest < ApplicationSystemTestCase
     security_user = create(:user, email: "security@rubygems.org")
 
     user = create(:user)
-    user.enable_mfa!(ROTP::Base32.random_base32, :ui_and_api)
+    user.enable_totp!(ROTP::Base32.random_base32, :ui_and_api)
     user_attributes = user.attributes.with_indifferent_access
 
     rubygem = create(:rubygem)
@@ -358,7 +358,7 @@ class Avo::UsersSystemTest < ApplicationSystemTestCase
 
     page.assert_no_text user.encrypted_password
     page.assert_no_text user_attributes[:encrypted_password]
-    page.assert_no_text user_attributes[:mfa_seed]
+    page.assert_no_text user_attributes[:totp_seed]
     page.assert_no_text user_attributes[:mfa_recovery_codes].first
 
     user.reload
@@ -416,7 +416,7 @@ class Avo::UsersSystemTest < ApplicationSystemTestCase
               "updated_at" => [user_attributes[:updated_at].as_json, user.updated_at.as_json],
               "confirmation_token" => [user_attributes[:confirmation_token], nil],
               "mfa_level" => %w[ui_and_api disabled],
-              "mfa_seed" => [user_attributes[:mfa_seed], ""],
+              "totp_seed" => [user_attributes[:totp_seed], ""],
               "mfa_recovery_codes" => [user_attributes[:mfa_recovery_codes], []],
               "encrypted_password" => [user_attributes[:encrypted_password], user.encrypted_password],
               "api_key" => ["secret123", nil],
@@ -432,7 +432,7 @@ class Avo::UsersSystemTest < ApplicationSystemTestCase
                 "encrypted_password",
                 "mfa_level",
                 "mfa_recovery_codes",
-                "mfa_seed",
+                "totp_seed",
                 "remember_token",
                 "updated_at"
               ).transform_values(&:as_json)
@@ -516,5 +516,56 @@ class Avo::UsersSystemTest < ApplicationSystemTestCase
 
       assert_equal("Please confirm your email address with RubyGems.org", mailer.subject)
     end
+  end
+
+  test "create user" do
+    admin_user = create(:admin_github_user, :is_admin)
+    sign_in_as admin_user
+
+    visit avo.resources_users_path
+
+    click_button "Actions"
+    click_on "Create User"
+
+    assert_no_changes "User.count" do
+      click_button "Create User"
+    end
+    page.assert_text "Must supply a sufficiently detailed comment"
+
+    fill_in "Comment", with: "A nice long comment"
+    fill_in "Email", with: "gem-user-001@example.com"
+    click_button "Create User"
+
+    page.assert_text "Action ran successfully!"
+    perform_enqueued_jobs
+
+    user = User.sole
+    audit = user.audits.sole
+
+    page.assert_text audit.id
+    assert_equal "User", audit.auditable_type
+    assert_equal "Create User", audit.action
+    assert_equal(
+      {
+        "records" => {
+          "gid://gemcutter/User/#{user.id}" => {
+            "changes" =>   user.attributes.transform_values { [nil, _1.as_json] },
+            "unchanged" => {}
+          }
+        },
+        "fields" => { "email" => "gem-user-001@example.com" },
+        "arguments" => {},
+        "models" => nil
+      },
+      audit.audited_changes
+    )
+    assert_equal admin_user, audit.admin_github_user
+    assert_equal "A nice long comment", audit.comment
+
+    mailers = ActionMailer::Base.deliveries.select do |mail|
+      mail.to.include?(user.email)
+    end
+
+    assert_equal(["Change your password"], mailers.map(&:subject))
   end
 end
