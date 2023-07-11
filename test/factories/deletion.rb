@@ -1,7 +1,8 @@
 FactoryBot.define do
   factory :deletion do
     user
-    rubygem
+    rubygem { "rubygem-name" }
+    version
     number
     platform { "ruby" }
   end

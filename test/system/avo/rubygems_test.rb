@@ -364,7 +364,7 @@ class Avo::RubygemsSystemTest < ApplicationSystemTestCase
 
     rubygem = create(:rubygem)
     version = create(:version, rubygem: rubygem)
-    deletion = create(:deletion, rubygem: rubygem, version: version)
+    deletion = create(:deletion, version: version)
     version_attributes = version.attributes.with_indifferent_access
     rubygem_attributes = rubygem.attributes.with_indifferent_access
 
