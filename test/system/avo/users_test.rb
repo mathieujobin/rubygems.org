@@ -52,7 +52,7 @@ class Avo::UsersSystemTest < ApplicationSystemTestCase
     page.assert_no_text user_attributes[:encrypted_password]
     page.assert_no_text user_attributes[:mfa_seed]
     page.assert_no_text user_attributes[:mfa_recovery_codes].first
-    page.assert_no_text user_attributes[:hashed_mfa_recovery_codes].first
+    page.assert_no_text user_attributes[:mfa_hashed_recovery_codes].first
 
     user.reload
 
@@ -60,7 +60,7 @@ class Avo::UsersSystemTest < ApplicationSystemTestCase
     assert_not_equal user_attributes[:encrypted_password], user.encrypted_password
     assert_empty user.mfa_seed
     assert_empty user.mfa_recovery_codes
-    assert_empty user.hashed_mfa_recovery_codes
+    assert_empty user.mfa_hashed_recovery_codes
 
     audit = user.audits.sole
 
@@ -76,12 +76,12 @@ class Avo::UsersSystemTest < ApplicationSystemTestCase
               "updated_at" => [user_attributes[:updated_at].as_json, user.updated_at.as_json],
               "mfa_seed" => [user_attributes[:mfa_seed], ""],
               "mfa_recovery_codes" => [user_attributes[:mfa_recovery_codes], []],
-              "hashed_mfa_recovery_codes" => [user_attributes[:hashed_mfa_recovery_codes], []],
+              "mfa_hashed_recovery_codes" => [user_attributes[:mfa_hashed_recovery_codes], []],
               "totp_seed" => [user_attributes[:totp_seed], ""],
               "encrypted_password" => [user_attributes[:encrypted_password], user.encrypted_password]
             },
             "unchanged" => user.attributes
-              .except("mfa_level", "updated_at", "mfa_seed", "mfa_recovery_codes", "hashed_mfa_recovery_codes", "totp_seed", "encrypted_password")
+              .except("mfa_level", "updated_at", "mfa_seed", "mfa_recovery_codes", "mfa_hashed_recovery_codes", "totp_seed", "encrypted_password")
               .transform_values(&:as_json)
           }
         },
@@ -124,7 +124,7 @@ class Avo::UsersSystemTest < ApplicationSystemTestCase
     page.assert_no_text user_attributes[:encrypted_password]
     page.assert_no_text user_attributes[:mfa_seed]
     page.assert_no_text user_attributes[:mfa_recovery_codes].first
-    page.assert_no_text user_attributes[:hashed_mfa_recovery_codes].first
+    page.assert_no_text user_attributes[:mfa_hashed_recovery_codes].first
 
     user.reload
 
@@ -132,7 +132,7 @@ class Avo::UsersSystemTest < ApplicationSystemTestCase
     assert_not_equal user_attributes[:encrypted_password], user.encrypted_password
     assert_empty user.mfa_seed
     assert_empty user.mfa_recovery_codes
-    assert_empty user.hashed_mfa_recovery_codes
+    assert_empty user.mfa_hashed_recovery_codes
 
     audit = user.audits.sole
 
@@ -151,7 +151,7 @@ class Avo::UsersSystemTest < ApplicationSystemTestCase
               "totp_seed" => [user_attributes[:totp_seed], ""],
               "mfa_seed" => [user_attributes[:mfa_seed], ""],
               "mfa_recovery_codes" => [user_attributes[:mfa_recovery_codes], []],
-              "hashed_mfa_recovery_codes" => [user_attributes[:hashed_mfa_recovery_codes], []],
+              "mfa_hashed_recovery_codes" => [user_attributes[:mfa_hashed_recovery_codes], []],
               "encrypted_password" => [user_attributes[:encrypted_password], user.encrypted_password],
               "api_key" => ["secret123", nil],
               "remember_token" => [user_attributes[:remember_token], nil],
@@ -166,7 +166,7 @@ class Avo::UsersSystemTest < ApplicationSystemTestCase
                 "encrypted_password",
                 "mfa_level",
                 "mfa_recovery_codes",
-                "hashed_mfa_recovery_codes",
+                "mfa_hashed_recovery_codes",
                 "totp_seed",
                 "mfa_seed",
                 "remember_token",
@@ -370,7 +370,7 @@ class Avo::UsersSystemTest < ApplicationSystemTestCase
     page.assert_no_text user_attributes[:encrypted_password]
     page.assert_no_text user_attributes[:mfa_seed]
     page.assert_no_text user_attributes[:mfa_recovery_codes].first
-    page.assert_no_text user_attributes[:hashed_mfa_recovery_codes].first
+    page.assert_no_text user_attributes[:mfa_hashed_recovery_codes].first
 
     user.reload
     rubygem.reload
@@ -430,7 +430,7 @@ class Avo::UsersSystemTest < ApplicationSystemTestCase
               "totp_seed" => [user_attributes[:totp_seed], ""],
               "mfa_seed" => [user_attributes[:mfa_seed], ""],
               "mfa_recovery_codes" => [user_attributes[:mfa_recovery_codes], []],
-              "hashed_mfa_recovery_codes" => [user_attributes[:hashed_mfa_recovery_codes], []],
+              "mfa_hashed_recovery_codes" => [user_attributes[:mfa_hashed_recovery_codes], []],
               "encrypted_password" => [user_attributes[:encrypted_password], user.encrypted_password],
               "api_key" => ["secret123", nil],
               "remember_token" => [user_attributes[:remember_token], nil],
@@ -445,7 +445,7 @@ class Avo::UsersSystemTest < ApplicationSystemTestCase
                 "encrypted_password",
                 "mfa_level",
                 "mfa_recovery_codes",
-                "hashed_mfa_recovery_codes",
+                "mfa_hashed_recovery_codes",
                 "totp_seed",
                 "mfa_seed",
                 "remember_token",
