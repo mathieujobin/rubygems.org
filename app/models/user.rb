@@ -168,8 +168,12 @@ class User < ApplicationRecord
     rubygems.to_a.sum(&:downloads)
   end
 
-  def rubygems_downloaded
-    rubygems.with_versions.sort_by { |rubygem| -rubygem.downloads }
+  def rubygems_downloaded(last_version_only: false)
+    if last_version_only
+      rubygems.with_versions.sort_by { |rubygem| -rubygem.latest.downloads_count }
+    else
+      rubygems.with_versions.sort_by { |rubygem| -rubygem.downloads }
+    end
   end
 
   def total_rubygems_count
